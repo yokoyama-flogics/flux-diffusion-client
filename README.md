@@ -27,6 +27,12 @@ This Black Forest Labs FLUX.1 Diffusion Model Python Client is a Python script a
 - **Flexible Seed Handling**: Support for random, fixed, and null seed values.
 - **Verbose Mode**: Enable detailed logging for debugging and insights.
 
+### Why `--seed rand` is Necessary
+
+- Currently, in the public specifications, the server does not return the seed used for image generation.
+- Without knowing the seed, users cannot reproduce the same image by reusing the seed.
+- Therefore, when `--seed rand` is used, the client generates and tracks its own seed to ensure reproducibility.
+
 ## Installation
 
 ### Prerequisites
