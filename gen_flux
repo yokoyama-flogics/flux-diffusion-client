@@ -1,0 +1,47 @@
+#!/bin/bash
+
+PYTHON=~/.pyenv/versions/3.11.8/envs/blackforest/bin/python
+
+# Initialize variables
+YES=false
+HELP=false
+ARGS=()
+
+# Parse arguments
+for arg in "$@"; do
+    case "$arg" in
+        -y|--yes)
+            YES=true
+            ;;
+        -h|--help)
+            HELP=true
+            ;;
+        *)
+            ARGS+=("$arg")
+            ;;
+    esac
+done
+
+# If -h or --help is provided, pass all arguments to Python without confirmation
+if $HELP; then
+    pbpaste | "$PYTHON" ~/Dropbox/monthly/202409/black_forest_flux_api/flux.py "$@"
+    exit 0
+fi
+
+# If -y or --yes not provided, prompt for confirmation
+if ! $YES; then
+    read -p "Are you sure you want to proceed? [y/N]: " CONFIRM
+    case "$CONFIRM" in
+        [yY][eE][sS]|[yY])
+            ;;
+        *)
+            echo "Operation cancelled."
+            exit 1
+            ;;
+    esac
+fi
+
+# Execute the Python script with pbpaste
+pbpaste |
+    "$PYTHON" ~/Dropbox/monthly/202409/black_forest_flux_api/flux.py \
+        "${ARGS[@]}"
