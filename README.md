@@ -1,5 +1,8 @@
 # Black Forest Labs FLUX.1 Diffusion Model Python Client
 
+[![Pylint](https://github.com/yokoyama-flogics/flux-diffusion-client/actions/workflows/pylint.yml/badge.svg)](https://github.com/yokoyama-flogics/flux-diffusion-client/actions/workflows/pylint.yml)
+[![Flake8](https://github.com/yokoyama-flogics/flux-diffusion-client/actions/workflows/flake8.yml/badge.svg)](https://github.com/yokoyama-flogics/flux-diffusion-client/actions/workflows/flake8.yml)
+
 A Python and Bash toolkit for interacting with the Black Forest Labs FLUX.1 Diffusion Model API
 
 ## Table of Contents
