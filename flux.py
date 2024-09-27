@@ -1,3 +1,13 @@
+"""
+Black Forest Labs FLUX.1 Diffusion Model Python Client
+
+This script interacts with the FLUX.1 Diffusion Model API to generate images
+based on user-provided prompts. It handles seed generation, API communication,
+and result retrieval.
+
+https://github.com/yokoyama-flogics/flux-diffusion-client
+"""
+
 import argparse
 import json
 import os
