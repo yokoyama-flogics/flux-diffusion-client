@@ -24,6 +24,7 @@ from dotenv import find_dotenv, load_dotenv
 # Set as a constant
 OUTPUT_DIR_NAME = "output"
 POLLING_SLEEP_INTERVAL = 1  # seconds
+REQUESTS_GET_TIMEOUT = 10  # seconds
 
 
 def load_api_key() -> str:
@@ -190,7 +191,7 @@ def download_image(url: str, filepath: Path) -> None:
     directory.
     """
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=REQUESTS_GET_TIMEOUT)
         response.raise_for_status()
         # Construct the full path by joining OUTPUT_DIR_NAME and filepath
         full_path = Path(OUTPUT_DIR_NAME) / filepath
@@ -284,6 +285,7 @@ def main() -> None:
                 "Content-Type": "application/json",
             },
             json=parameters,
+            timeout=REQUESTS_GET_TIMEOUT,
         )
         response.raise_for_status()
         request_response = response.json()
@@ -309,6 +311,7 @@ def main() -> None:
                     "x-key": api_key,
                 },
                 params={"id": request_id},
+                timeout=REQUESTS_GET_TIMEOUT,
             )
             result_response.raise_for_status()
             result_data = result_response.json()
