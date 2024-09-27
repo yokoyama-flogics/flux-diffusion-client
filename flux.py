@@ -202,6 +202,10 @@ def download_image(url: str, filepath: Path) -> None:
 
 
 def main() -> None:
+    """
+    Main function to execute the image generation process.
+    """
+
     # Define default parameters
     defaults = {
         "width": 1024,
