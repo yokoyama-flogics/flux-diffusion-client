@@ -21,7 +21,7 @@ from typing import Any, Dict
 import requests
 from dotenv import find_dotenv, load_dotenv
 
-# Set as a constant
+# Constants
 OUTPUT_DIR_NAME = "output"
 POLLING_SLEEP_INTERVAL = 1  # seconds
 REQUESTS_GET_TIMEOUT = 10  # seconds
@@ -82,7 +82,7 @@ def parse_arguments(defaults: Dict[str, Any]) -> argparse.Namespace:
         help=(
             "Number of network evaluations. Determines how many steps the "
             "diffusion model takes to generate the image. Higher values "
-            " improve quality but increase computation time."
+            "improve quality but increase computation time."
         ),
     )
     parser.add_argument(
@@ -202,7 +202,65 @@ def download_image(url: str, filepath: Path) -> None:
         print(f"Failed to download image from {url}: {e}")
 
 
-def main() -> None:
+def make_post_request(
+    api_key: str, parameters: Dict[str, Any]
+) -> Dict[str, Any]:
+    """
+    Make a POST request to the FLUX.1 API and return the response JSON.
+    """
+    try:
+        response = requests.post(
+            "https://api.bfl.ml/v1/image",
+            headers={
+                "accept": "application/json",
+                "x-key": api_key,
+                "Content-Type": "application/json",
+            },
+            json=parameters,
+            timeout=REQUESTS_GET_TIMEOUT,
+        )
+        response.raise_for_status()
+        return response.json()
+    except requests.RequestException as e:
+        sys.exit(f"Error during POST request: {e}")
+
+
+def poll_for_result(
+    api_key: str, request_id: str, verbose: bool
+) -> Dict[str, Any]:
+    """
+    Poll the FLUX.1 API for the result using the request ID.
+    """
+    while True:
+        time.sleep(POLLING_SLEEP_INTERVAL)
+        try:
+            result_response = requests.get(
+                "https://api.bfl.ml/v1/get_result",
+                headers={
+                    "accept": "application/json",
+                    "x-key": api_key,
+                },
+                params={"id": request_id},
+                timeout=REQUESTS_GET_TIMEOUT,
+            )
+            result_response.raise_for_status()
+            result_data = result_response.json()
+        except requests.RequestException as e:
+            print(f"Error during GET request: {e}")
+            continue
+
+        if verbose:
+            print("Result Response:")
+            print(json.dumps(result_data, indent=4, ensure_ascii=False))
+
+        if result_data.get("status") == "Ready":
+            print("Result is ready.")
+            return result_data
+
+        print(f"Status: {result_data.get('status')}")
+
+
+def main() -> None:  # pylint: disable=too-many-locals
     """
     Main function to execute the image generation process.
     """
@@ -276,21 +334,7 @@ def main() -> None:
         print(json.dumps(parameters, indent=4, ensure_ascii=False))
 
     # Make POST request
-    try:
-        response = requests.post(
-            "https://api.bfl.ml/v1/image",
-            headers={
-                "accept": "application/json",
-                "x-key": api_key,
-                "Content-Type": "application/json",
-            },
-            json=parameters,
-            timeout=REQUESTS_GET_TIMEOUT,
-        )
-        response.raise_for_status()
-        request_response = response.json()
-    except requests.RequestException as e:
-        sys.exit(f"Error during POST request: {e}")
+    request_response = make_post_request(api_key, parameters)
 
     if args.verbose:
         print("Response from POST request:")
@@ -301,33 +345,7 @@ def main() -> None:
         sys.exit("Error: 'id' not found in the POST response.")
 
     # Polling for result
-    while True:
-        time.sleep(POLLING_SLEEP_INTERVAL)
-        try:
-            result_response = requests.get(
-                "https://api.bfl.ml/v1/get_result",
-                headers={
-                    "accept": "application/json",
-                    "x-key": api_key,
-                },
-                params={"id": request_id},
-                timeout=REQUESTS_GET_TIMEOUT,
-            )
-            result_response.raise_for_status()
-            result_data = result_response.json()
-        except requests.RequestException as e:
-            print(f"Error during GET request: {e}")
-            continue
-
-        if args.verbose:
-            print("Result Response:")
-            print(json.dumps(result_data, indent=4, ensure_ascii=False))
-
-        if result_data.get("status") == "Ready":
-            print("Result is ready.")
-            break
-        else:
-            print(f"Status: {result_data.get('status')}")
+    result_data = poll_for_result(api_key, request_id, args.verbose)
 
     # Save result JSON
     result_filepath = output_dir / result_filename
